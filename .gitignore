@@ -1,0 +1,4 @@
+# Ignore tests and benchmarks
+benchmarks.out
+coverage.out
+coverage.html

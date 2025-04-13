@@ -1,0 +1,103 @@
+package runtime
+
+import (
+	"fmt"
+
+	"github.com/bytecodealliance/wasmtime-go/v31"
+
+	callbackqueue "github.com/dadamu/contract-wasmvm/internal/contract/callback-queue"
+	repository "github.com/dadamu/contract-wasmvm/internal/contract/repository"
+)
+
+type Runtime struct {
+	callbackQueue *callbackqueue.CallbackQueue
+
+	engine   *wasmtime.Engine
+	store    *wasmtime.Store
+	instance *wasmtime.Instance
+
+	contractID string
+	repository repository.IRepository
+}
+
+func NewRuntimeFromModule(
+	callbackQueue *callbackqueue.CallbackQueue,
+	engine *wasmtime.Engine,
+	contractID string,
+	repository repository.IRepository,
+	module *wasmtime.Module,
+	gasLimit uint64,
+) *Runtime {
+	runtime := &Runtime{
+		callbackQueue: callbackQueue,
+		engine:        engine,
+		contractID:    contractID,
+		repository:    repository,
+	}
+
+	instance := runtime.newInstanceFromModule(module, gasLimit)
+	if instance == nil {
+		panic("failed to create instance")
+	}
+
+	runtime.instance = instance
+	return runtime
+}
+
+func (e *Runtime) newInstanceFromModule(module *wasmtime.Module, gasLimit uint64) *wasmtime.Instance {
+	// Create a new store and prepare the linker to prevent race conditions
+	store := wasmtime.NewStore(e.engine)
+	store.SetFuel(gasLimit)
+	e.store = store
+	linker := e.prepareLinker()
+
+	instance, err := linker.Instantiate(store, module)
+	if err != nil {
+		panic(err)
+	}
+	return instance
+}
+
+func (e *Runtime) Run(method string, state []byte, args []byte) (remainingGas uint64, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic: %v", r)
+		}
+	}()
+
+	run := e.instance.GetFunc(e.store, method)
+	if run == nil {
+		return 0, fmt.Errorf("function %s not found in instance", method)
+	}
+
+	statePtr := e.writeBytesByInstance(state)
+	argsPtr := e.writeBytesByInstance(args)
+
+	// Call the run function with the pointer to the data and its length
+	_, err = run.Call(e.store, statePtr, argsPtr)
+	if err != nil {
+		return 0, err
+	}
+
+	// Get the remaining fuel
+	// Ignore error that fuel is not configured for the store
+	remainingGas, _ = e.store.GetFuel()
+
+	return remainingGas, nil
+}
+
+func (e *Runtime) writeBytesByInstance(message []byte) int32 {
+	malloc := e.instance.GetExport(e.store, "__new").Func()
+	if malloc == nil {
+		panic("__new function not found")
+	}
+
+	resultPtr, err := malloc.Call(e.store, int32(len(message)), 1)
+	if err != nil {
+		panic(err)
+	}
+	offset := resultPtr.(int32)
+	memory := e.instance.GetExport(e.store, "memory").Memory().UnsafeData(e.store)
+	copy(memory[offset:offset+int32(len(message))], message)
+	return offset
+}
