@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 
 	"github.com/bytecodealliance/wasmtime-go/v31"
@@ -43,7 +42,7 @@ func (e *Runtime) saveEntry() func(caller *wasmtime.Caller, idPtr int32, dataPtr
 		// Read the id string
 		id := string(readBytes(caller, idPtr))
 
-		var dataBz json.RawMessage = readBytes(caller, dataPtr)
+		var dataBz = readBytes(caller, dataPtr)
 
 		err := e.repository.SaveEntity(id, e.contractId, dataBz)
 		if err != nil {
