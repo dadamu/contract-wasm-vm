@@ -39,16 +39,16 @@ func BenchmarkRuntimeAddOne(b *testing.B) {
 	)
 
 	// Setup the mock repository
-	initValue := []byte{1, 0, 0, 0}
-	expectedValue := []byte{2, 0, 0, 0}
+	loadedValue := []byte{1, 0, 0, 0}
+	savedValue := []byte{2, 0, 0, 0}
 
 	repository.EXPECT().
 		LoadEntity("test", "test").
-		Return(initValue, nil).
+		Return(loadedValue, nil).
 		AnyTimes()
 
 	repository.EXPECT().
-		SaveEntity("test", "test", expectedValue).
+		SaveEntity("test", "test", savedValue).
 		Return(nil).
 		AnyTimes()
 

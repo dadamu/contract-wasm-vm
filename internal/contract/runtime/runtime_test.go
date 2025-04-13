@@ -59,11 +59,11 @@ func (s *RuntimeTestSuite) TestInfiniteLoop() {
 
 func (s *RuntimeTestSuite) TestSaveAndLoad() {
 	// Setup the mock repository
-	initValue := []byte{1, 0, 0, 0}     // Initial value: 1
-	expectedValue := []byte{2, 0, 0, 0} // Expected value after increment: 2
+	loadedValue := []byte{1, 0, 0, 0} // Initial value: 1
+	savedValue := []byte{2, 0, 0, 0}  // Expected value after increment: 2
 
-	s.repository.EXPECT().LoadEntity("test", "test").Return(initValue, nil)
-	s.repository.EXPECT().SaveEntity("test", "test", expectedValue).Return(nil)
+	s.repository.EXPECT().LoadEntity("test", "test").Return(loadedValue, nil)
+	s.repository.EXPECT().SaveEntity("test", "test", savedValue).Return(nil)
 
 	_, err := s.runtime.Run("addOne", []byte{}, []byte{})
 	s.Require().NoError(err)
@@ -71,11 +71,11 @@ func (s *RuntimeTestSuite) TestSaveAndLoad() {
 
 func (s *RuntimeTestSuite) TestGasRemaining() {
 	// Setup the mock repository
-	initValue := []byte{1, 0, 0, 0}     // Initial value: 1
-	expectedValue := []byte{2, 0, 0, 0} // Expected value after increment: 2
+	loadedValue := []byte{1, 0, 0, 0} // Initial value: 1
+	savedValue := []byte{2, 0, 0, 0}  // Expected value after increment: 2
 
-	s.repository.EXPECT().LoadEntity("test", "test").Return(initValue, nil)
-	s.repository.EXPECT().SaveEntity("test", "test", expectedValue).Return(nil)
+	s.repository.EXPECT().LoadEntity("test", "test").Return(loadedValue, nil)
+	s.repository.EXPECT().SaveEntity("test", "test", savedValue).Return(nil)
 
 	remaining, err := s.runtime.Run("addOne", []byte{}, []byte{})
 	s.Require().NoError(err)
