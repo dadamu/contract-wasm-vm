@@ -6,7 +6,7 @@ import (
 	"github.com/bytecodealliance/wasmtime-go/v31"
 
 	callbackqueue "github.com/dadamu/contract-wasmvm/internal/contract/callback-queue"
-	repository "github.com/dadamu/contract-wasmvm/internal/contract/repository"
+	"github.com/dadamu/contract-wasmvm/internal/interfaces"
 )
 
 type Runtime struct {
@@ -17,14 +17,14 @@ type Runtime struct {
 	instance *wasmtime.Instance
 
 	contractId string
-	repository repository.IRepository
+	repository interfaces.IContractRepository
 }
 
 func NewRuntimeFromModule(
 	callbackQueue *callbackqueue.CallbackQueue,
 	engine *wasmtime.Engine,
 	contractId string,
-	repository repository.IRepository,
+	repository interfaces.IContractRepository,
 	module *wasmtime.Module,
 	gasLimit uint64,
 ) *Runtime {

@@ -9,13 +9,13 @@ import (
 	"go.uber.org/mock/gomock"
 
 	callbackqueue "github.com/dadamu/contract-wasmvm/internal/contract/callback-queue"
-	repositorytestutil "github.com/dadamu/contract-wasmvm/internal/contract/repository/testutil"
+	"github.com/dadamu/contract-wasmvm/internal/interfaces/testutil"
 )
 
 type RuntimeTestSuite struct {
 	suite.Suite
 	queue      *callbackqueue.CallbackQueue
-	repository *repositorytestutil.MockIRepository
+	repository *testutil.MockIContractRepository
 	runtime    *Runtime
 }
 
@@ -28,7 +28,7 @@ func (suite *RuntimeTestSuite) SetupTest() {
 		suite.T().Fatalf("failed to read module: %v", err)
 	}
 
-	suite.repository = repositorytestutil.NewMockIRepository(gomockCtrl)
+	suite.repository = testutil.NewMockIContractRepository(gomockCtrl)
 	suite.queue = callbackqueue.NewCallbackQueue()
 
 	config := wasmtime.NewConfig()
@@ -50,6 +50,12 @@ func (suite *RuntimeTestSuite) SetupTest() {
 
 	suite.runtime = runtime
 }
+
+func TestRuntimeTestSuite(t *testing.T) {
+	suite.Run(t, new(RuntimeTestSuite))
+}
+
+// -----------------------------------------------------------------------------
 
 func (s *RuntimeTestSuite) TestInfiniteLoop() {
 	_, err := s.runtime.Run("infiniteLoop", []byte{}, []byte{})
@@ -97,8 +103,4 @@ func (s *RuntimeTestSuite) TestContractCall() {
 	s.Require().Equal("contract", msg.Contract)
 	s.Require().Equal("method", msg.Method)
 	s.Require().Equal([]byte("args"), msg.Args)
-}
-
-func TestRuntimeTestSuite(t *testing.T) {
-	suite.Run(t, new(RuntimeTestSuite))
 }

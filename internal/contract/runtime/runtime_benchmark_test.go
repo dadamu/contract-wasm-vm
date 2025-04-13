@@ -8,7 +8,7 @@ import (
 
 	"github.com/bytecodealliance/wasmtime-go/v31"
 	callbackqueue "github.com/dadamu/contract-wasmvm/internal/contract/callback-queue"
-	repositorytestutil "github.com/dadamu/contract-wasmvm/internal/contract/repository/testutil"
+	"github.com/dadamu/contract-wasmvm/internal/interfaces/testutil"
 )
 
 func BenchmarkRuntimeAddOne(b *testing.B) {
@@ -28,7 +28,7 @@ func BenchmarkRuntimeAddOne(b *testing.B) {
 		b.Fatalf("failed to create module: %v", err)
 	}
 
-	repository := repositorytestutil.NewMockIRepository(ctrl)
+	repository := testutil.NewMockIContractRepository(ctrl)
 	runtime := NewRuntimeFromModule(
 		callbackqueue.NewCallbackQueue(),
 		engine,

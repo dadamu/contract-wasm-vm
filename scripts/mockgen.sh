@@ -2,7 +2,7 @@
 
 mockgen_cmd="mockgen"
 
-find . -type f -path '*/repository/*' -name '*.go' -and -not -name '*_test.go' -and -not -path '*/testutil/*' | while read -r source_file; do
+find . -type f -path '*/interfaces/*' -name '*.go' -and -not -name '*_test.go' -and -not -path '*/testutil/*' | while read -r source_file; do
     source_dir=$(dirname "$source_file")
     destination_dir="$source_dir/testutil"
 
