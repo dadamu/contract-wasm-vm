@@ -1,7 +1,11 @@
 // The entry file of your WebAssembly module.
 import * as runtime from "./runtime";
 
-export function addOne(state: ArrayBuffer, args: ArrayBuffer): void {
+export function addOne(
+  state: ArrayBuffer,
+  sender: ArrayBuffer,
+  args: ArrayBuffer
+): void {
   const id = "test";
   const idBuffer = String.UTF8.encode(id);
 
@@ -20,18 +24,30 @@ export function addOne(state: ArrayBuffer, args: ArrayBuffer): void {
   runtime.save(idBuffer, newCountBuffer);
 }
 
-export function crash(state: ArrayBuffer, args: ArrayBuffer): void {
+export function crash(
+  state: ArrayBuffer,
+  sender: ArrayBuffer,
+  args: ArrayBuffer
+): void {
   throw new Error("crash");
 }
 
-export function callback(state: ArrayBuffer, args: ArrayBuffer): void {
+export function callback(
+  state: ArrayBuffer,
+  sender: ArrayBuffer,
+  args: ArrayBuffer
+): void {
   const contractIdBuffer = String.UTF8.encode("contract");
   const methodBuffer = String.UTF8.encode("method");
   const argsBuffer = String.UTF8.encode("args");
   runtime.contractCall(contractIdBuffer, methodBuffer, argsBuffer);
 }
 
-export function infiniteLoop(state: ArrayBuffer, args: ArrayBuffer): void {
+export function infiniteLoop(
+  state: ArrayBuffer,
+  sender: ArrayBuffer,
+  args: ArrayBuffer
+): void {
   while (true) {
     // Do nothing
   }

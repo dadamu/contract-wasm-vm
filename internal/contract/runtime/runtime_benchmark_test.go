@@ -8,6 +8,7 @@ import (
 
 	"github.com/bytecodealliance/wasmtime-go/v31"
 	callbackqueue "github.com/dadamu/contract-wasmvm/internal/contract/callback-queue"
+	"github.com/dadamu/contract-wasmvm/internal/interfaces"
 	"github.com/dadamu/contract-wasmvm/internal/interfaces/testutil"
 )
 
@@ -55,7 +56,7 @@ func BenchmarkRuntimeAddOne(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, err := runtime.Run("addOne", []byte{}, []byte{})
+		_, err := runtime.Run(nil, interfaces.NewContractMessage("test", "addOne", []byte{}, "sender"))
 		if err != nil {
 			b.Fatalf("failed to run addOne: %v", err)
 		}

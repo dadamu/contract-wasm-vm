@@ -9,6 +9,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	callbackqueue "github.com/dadamu/contract-wasmvm/internal/contract/callback-queue"
+	"github.com/dadamu/contract-wasmvm/internal/interfaces"
 	"github.com/dadamu/contract-wasmvm/internal/interfaces/testutil"
 )
 
@@ -58,7 +59,7 @@ func TestRuntimeTestSuite(t *testing.T) {
 // -----------------------------------------------------------------------------
 
 func (s *RuntimeTestSuite) TestInfiniteLoop() {
-	_, err := s.runtime.Run("infiniteLoop", []byte{}, []byte{})
+	_, err := s.runtime.Run(nil, interfaces.NewContractMessage("test", "infiniteLoop", []byte{}, "sender"))
 	s.Require().Error(err)
 	s.Require().Contains(err.Error(), "wasm trap: all fuel consumed by WebAssembly")
 }
@@ -71,7 +72,7 @@ func (s *RuntimeTestSuite) TestSaveAndLoad() {
 	s.repository.EXPECT().LoadEntity("test", "test").Return(loadedValue, nil)
 	s.repository.EXPECT().SaveEntity("test", "test", savedValue).Return(nil)
 
-	_, err := s.runtime.Run("addOne", []byte{}, []byte{})
+	_, err := s.runtime.Run(nil, interfaces.NewContractMessage("test", "addOne", []byte{}, "sender"))
 	s.Require().NoError(err)
 }
 
@@ -83,19 +84,19 @@ func (s *RuntimeTestSuite) TestGasRemaining() {
 	s.repository.EXPECT().LoadEntity("test", "test").Return(loadedValue, nil)
 	s.repository.EXPECT().SaveEntity("test", "test", savedValue).Return(nil)
 
-	remaining, err := s.runtime.Run("addOne", []byte{}, []byte{})
+	remaining, err := s.runtime.Run(nil, interfaces.NewContractMessage("test", "addOne", []byte{}, "sender"))
 	s.Require().NoError(err)
-	s.Require().Equal(uint64(8_045), remaining)
+	s.Require().Equal(uint64(7_603), remaining)
 }
 
 func (s *RuntimeTestSuite) TestCrash() {
-	_, err := s.runtime.Run("crash", []byte{}, []byte{})
+	_, err := s.runtime.Run(nil, interfaces.NewContractMessage("test", "crash", []byte{}, "sender"))
 	s.Require().Error(err)
 	s.Require().Contains(err.Error(), "WASM called abort msg:")
 }
 
 func (s *RuntimeTestSuite) TestContractCall() {
-	_, err := s.runtime.Run("callback", []byte{}, []byte{})
+	_, err := s.runtime.Run(nil, interfaces.NewContractMessage("test", "callback", []byte{}, "sender"))
 	s.Require().NoError(err)
 
 	msg, found := s.queue.Dequeue()

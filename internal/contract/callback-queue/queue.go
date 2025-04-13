@@ -1,22 +1,10 @@
 package callbackqueue
 
-import "container/list"
+import (
+	"container/list"
 
-type CallbackMessage struct {
-	Contract string
-	Method   string
-	Args     []byte
-}
-
-func NewCallbackMessage(contract, method string, args []byte) CallbackMessage {
-	return CallbackMessage{
-		Contract: contract,
-		Method:   method,
-		Args:     args,
-	}
-}
-
-// ---------------------------------------------------------
+	"github.com/dadamu/contract-wasmvm/internal/interfaces"
+)
 
 type CallbackQueue struct {
 	container *list.List
@@ -27,18 +15,18 @@ func NewCallbackQueue() *CallbackQueue {
 		container: list.New(),
 	}
 }
-func (q *CallbackQueue) Enqueue(msg CallbackMessage) {
+func (q *CallbackQueue) Enqueue(msg interfaces.ContractMessage) {
 	q.container.PushBack(msg)
 }
 
-func (q *CallbackQueue) Dequeue() (CallbackMessage, bool) {
+func (q *CallbackQueue) Dequeue() (interfaces.ContractMessage, bool) {
 	if q.IsEmpty() {
-		return CallbackMessage{}, false
+		return interfaces.ContractMessage{}, false
 	}
 
 	front := q.container.Front()
 	q.container.Remove(front)
-	return front.Value.(CallbackMessage), true
+	return front.Value.(interfaces.ContractMessage), true
 }
 
 func (q *CallbackQueue) IsEmpty() bool {

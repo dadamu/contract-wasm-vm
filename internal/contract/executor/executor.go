@@ -23,15 +23,15 @@ func NewContractExecutor(
 	}
 }
 
-func (ce *ContractExecutor) RunContractWithGasLimit(contractId string, method string, args []byte, gasLimit uint64) error {
+func (ce *ContractExecutor) RunContractWithGasLimit(msg interfaces.ContractMessage, gasLimit uint64) error {
 	callbackQueue := callbackqueue.NewCallbackQueue()
 
 	// Enqueue the initial contract call
 	// This is the first contract call that will be executed
-	callbackQueue.Enqueue(callbackqueue.NewCallbackMessage(contractId, method, args))
+	callbackQueue.Enqueue(msg)
 
-	for callback, found := callbackQueue.Dequeue(); found; {
-		remaining, err := ce.runContract(callbackQueue, callback.Contract, callback.Method, callback.Args, gasLimit)
+	for msg, found := callbackQueue.Dequeue(); found; {
+		remaining, err := ce.runContract(callbackQueue, msg, gasLimit)
 		if err != nil {
 			return err
 		}
@@ -43,16 +43,16 @@ func (ce *ContractExecutor) RunContractWithGasLimit(contractId string, method st
 	return nil
 }
 
-func (ce *ContractExecutor) runContract(callbackQueue *callbackqueue.CallbackQueue, contractId string, method string, args []byte, gasLimit uint64) (uint64, error) {
-	module, err := ce.loadContract(contractId)
+func (ce *ContractExecutor) runContract(callbackQueue *callbackqueue.CallbackQueue, msg interfaces.ContractMessage, gasLimit uint64) (uint64, error) {
+	module, err := ce.loadContract(msg.Contract)
 	if err != nil {
 		return 0, err
 	}
 
-	runtime := runtime.NewRuntimeFromModule(callbackQueue, ce.engine, contractId, ce.repository, module, gasLimit)
+	runtime := runtime.NewRuntimeFromModule(callbackQueue, ce.engine, msg.Contract, ce.repository, module, gasLimit)
 
 	// TODO: Add state for run instead of nil
-	return runtime.Run(method, nil, args)
+	return runtime.Run(nil, msg)
 }
 
 func (ce *ContractExecutor) loadContract(contractId string) (*wasmtime.Module, error) {

@@ -5,7 +5,8 @@ import (
 	"fmt"
 
 	"github.com/bytecodealliance/wasmtime-go/v31"
-	callbackqueue "github.com/dadamu/contract-wasmvm/internal/contract/callback-queue"
+
+	"github.com/dadamu/contract-wasmvm/internal/interfaces"
 )
 
 func (e *Runtime) prepareLinker() *wasmtime.Linker {
@@ -83,10 +84,11 @@ func (e *Runtime) callEntry() func(caller *wasmtime.Caller, contractIdPtr int32,
 
 		// Call the contract method with the arguments
 		e.callbackQueue.Enqueue(
-			callbackqueue.NewCallbackMessage(
+			interfaces.NewContractMessage(
 				contractId,
 				method,
 				args,
+				e.contractId,
 			),
 		)
 	}
