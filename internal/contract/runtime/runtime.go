@@ -16,14 +16,14 @@ type Runtime struct {
 	store    *wasmtime.Store
 	instance *wasmtime.Instance
 
-	contractID string
+	contractId string
 	repository repository.IRepository
 }
 
 func NewRuntimeFromModule(
 	callbackQueue *callbackqueue.CallbackQueue,
 	engine *wasmtime.Engine,
-	contractID string,
+	contractId string,
 	repository repository.IRepository,
 	module *wasmtime.Module,
 	gasLimit uint64,
@@ -31,7 +31,7 @@ func NewRuntimeFromModule(
 	runtime := &Runtime{
 		callbackQueue: callbackQueue,
 		engine:        engine,
-		contractID:    contractID,
+		contractId:    contractId,
 		repository:    repository,
 	}
 
@@ -45,7 +45,7 @@ func NewRuntimeFromModule(
 }
 
 func (e *Runtime) newInstanceFromModule(module *wasmtime.Module, gasLimit uint64) *wasmtime.Instance {
-	// Create a new store and prepare the linker to prevent race conditions
+	// Create a new isolated store for the contract runtime
 	store := wasmtime.NewStore(e.engine)
 	store.SetFuel(gasLimit)
 	e.store = store
@@ -73,7 +73,7 @@ func (e *Runtime) Run(method string, state []byte, args []byte) (remainingGas ui
 	statePtr := e.writeBytesByInstance(state)
 	argsPtr := e.writeBytesByInstance(args)
 
-	// Call the run function with the pointer to the data and its length
+	// Call the run function with the pointer to the golobal state and args
 	_, err = run.Call(e.store, statePtr, argsPtr)
 	if err != nil {
 		return 0, err

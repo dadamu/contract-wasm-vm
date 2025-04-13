@@ -45,7 +45,7 @@ func (e *Runtime) saveEntry() func(caller *wasmtime.Caller, idPtr int32, dataPtr
 
 		var dataBz json.RawMessage = readBytes(caller, dataPtr)
 
-		err := e.repository.SaveEntity(id, e.contractID, dataBz)
+		err := e.repository.SaveEntity(id, e.contractId, dataBz)
 		if err != nil {
 			panic(err)
 		}
@@ -60,8 +60,8 @@ func (e *Runtime) loadEntry() func(caller *wasmtime.Caller, idPtr int32) int32 {
 		// Read the id string
 		id := string(readBytes(caller, idPtr))
 
-		loaded, err := e.repository.LoadEntity(e.contractID, id)
-		if err != nil && err == fmt.Errorf("contract %s with id %s not found", e.contractID, id) {
+		loaded, err := e.repository.LoadEntity(e.contractId, id)
+		if err != nil && err == fmt.Errorf("contract %s with id %s not found", e.contractId, id) {
 			// Write empty data to the memory if the entity is not found
 			return writeBytes(caller, []byte{})
 		} else if err != nil {
@@ -73,21 +73,19 @@ func (e *Runtime) loadEntry() func(caller *wasmtime.Caller, idPtr int32) int32 {
 }
 
 // `contract.call` function that will be called from the WASM code
-func (e *Runtime) callEntry() func(caller *wasmtime.Caller, contractIDPtr int32, methodPtr int32, argsPtr int32) {
-	return func(caller *wasmtime.Caller, contractIDPtr int32, methodPtr int32, argsPtr int32) {
+func (e *Runtime) callEntry() func(caller *wasmtime.Caller, contractIdPtr int32, methodPtr int32, argsPtr int32) {
+	return func(caller *wasmtime.Caller, contractIdPtr int32, methodPtr int32, argsPtr int32) {
 		// TODO: consume fuel
 
-		// Read the contract ID and method name strings
-		contractID := string(readBytes(caller, contractIDPtr))
+		// Read the contract Id, method name strings and args
+		contractId := string(readBytes(caller, contractIdPtr))
 		method := string(readBytes(caller, methodPtr))
-
-		// Read the arguments
 		args := readBytes(caller, argsPtr)
 
 		// Call the contract method with the arguments
 		e.callbackQueue.Enqueue(
 			callbackqueue.NewCallbackMessage(
-				contractID,
+				contractId,
 				method,
 				args,
 			),
