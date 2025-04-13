@@ -43,13 +43,13 @@ func (ce *ContractExecutor) RunContractWithGasLimit(contractId string, method st
 	return nil
 }
 
-func (ce *ContractExecutor) runContract(callbackQueue *callbackqueue.CallbackQueue, contractId string, method string, args []byte, remainingGas uint64) (uint64, error) {
+func (ce *ContractExecutor) runContract(callbackQueue *callbackqueue.CallbackQueue, contractId string, method string, args []byte, gasLimit uint64) (uint64, error) {
 	module, err := ce.loadContract(contractId)
 	if err != nil {
 		return 0, err
 	}
 
-	runtime := runtime.NewRuntimeFromModule(callbackQueue, ce.engine, contractId, ce.repository, module, remainingGas)
+	runtime := runtime.NewRuntimeFromModule(callbackQueue, ce.engine, contractId, ce.repository, module, gasLimit)
 
 	// TODO: Add state for run instead of nil
 	return runtime.Run(method, nil, args)
