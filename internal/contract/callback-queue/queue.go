@@ -1,5 +1,7 @@
 package callbackqueue
 
+import "container/list"
+
 type CallbackMessage struct {
 	Contract string
 	Method   string
@@ -17,27 +19,28 @@ func NewCallbackMessage(contract, method string, args []byte) CallbackMessage {
 // ---------------------------------------------------------
 
 type CallbackQueue struct {
-	container []CallbackMessage
+	container *list.List
 }
 
 func NewCallbackQueue() *CallbackQueue {
 	return &CallbackQueue{
-		container: make([]CallbackMessage, 0),
+		container: list.New(),
 	}
 }
 func (q *CallbackQueue) Enqueue(msg CallbackMessage) {
-	q.container = append(q.container, msg)
+	q.container.PushBack(msg)
 }
 
 func (q *CallbackQueue) Dequeue() (CallbackMessage, bool) {
-	if len(q.container) == 0 {
+	if q.IsEmpty() {
 		return CallbackMessage{}, false
 	}
-	msg := q.container[0]
-	q.container = q.container[1:]
-	return msg, true
+
+	front := q.container.Front()
+	q.container.Remove(front)
+	return front.Value.(CallbackMessage), true
 }
 
 func (q *CallbackQueue) IsEmpty() bool {
-	return len(q.container) == 0
+	return q.container.Len() == 0
 }
