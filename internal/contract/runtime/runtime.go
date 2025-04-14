@@ -6,7 +6,7 @@ import (
 	"github.com/bytecodealliance/wasmtime-go/v31"
 
 	callbackqueue "github.com/dadamu/contract-wasmvm/internal/contract/callback-queue"
-	"github.com/dadamu/contract-wasmvm/internal/interfaces"
+	"github.com/dadamu/contract-wasmvm/internal/contract/interfaces"
 )
 
 type Runtime struct {

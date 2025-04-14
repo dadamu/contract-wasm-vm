@@ -8,8 +8,8 @@ import (
 
 	"github.com/bytecodealliance/wasmtime-go/v31"
 	callbackqueue "github.com/dadamu/contract-wasmvm/internal/contract/callback-queue"
-	"github.com/dadamu/contract-wasmvm/internal/interfaces"
-	"github.com/dadamu/contract-wasmvm/internal/interfaces/testutil"
+	"github.com/dadamu/contract-wasmvm/internal/contract/interfaces"
+	"github.com/dadamu/contract-wasmvm/internal/contract/interfaces/testutil"
 )
 
 func BenchmarkRuntimeAddOne(b *testing.B) {
@@ -45,12 +45,11 @@ func BenchmarkRuntimeAddOne(b *testing.B) {
 
 	repository.EXPECT().
 		LoadEntity("test", "test").
-		Return(loadedValue, nil).
+		Return(loadedValue).
 		AnyTimes()
 
 	repository.EXPECT().
 		SaveEntity("test", "test", savedValue).
-		Return(nil).
 		AnyTimes()
 
 	b.ResetTimer()

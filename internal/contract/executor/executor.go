@@ -3,8 +3,8 @@ package executor
 import (
 	"github.com/bytecodealliance/wasmtime-go/v31"
 	callbackqueue "github.com/dadamu/contract-wasmvm/internal/contract/callback-queue"
+	"github.com/dadamu/contract-wasmvm/internal/contract/interfaces"
 	"github.com/dadamu/contract-wasmvm/internal/contract/runtime"
-	"github.com/dadamu/contract-wasmvm/internal/interfaces"
 )
 
 type ContractExecutor struct {
@@ -23,7 +23,7 @@ func NewContractExecutor(
 	}
 }
 
-func (ce *ContractExecutor) RunContractWithGasLimit(msg interfaces.ContractMessage, gasLimit uint64) error {
+func (ce *ContractExecutor) RunContractWithGasLimit(msg interfaces.ContractMessage, gasLimit uint64) (uint64, error) {
 	callbackQueue := callbackqueue.NewCallbackQueue()
 
 	// Enqueue the initial contract call
@@ -33,14 +33,14 @@ func (ce *ContractExecutor) RunContractWithGasLimit(msg interfaces.ContractMessa
 	for msg, found := callbackQueue.Dequeue(); found; {
 		remaining, err := ce.runContract(callbackQueue, msg, gasLimit)
 		if err != nil {
-			return err
+			return 0, err
 		}
 
 		// Update the gas limit for the next contract call
 		gasLimit = remaining
 	}
 
-	return nil
+	return gasLimit, nil
 }
 
 func (ce *ContractExecutor) runContract(callbackQueue *callbackqueue.CallbackQueue, msg interfaces.ContractMessage, gasLimit uint64) (uint64, error) {
@@ -57,10 +57,7 @@ func (ce *ContractExecutor) runContract(callbackQueue *callbackqueue.CallbackQue
 
 func (ce *ContractExecutor) loadContract(contractId string) (*wasmtime.Module, error) {
 	// Load the raw binary module from the repository
-	rawModule, err := ce.repository.GetContractRawModule(contractId)
-	if err != nil {
-		return nil, err
-	}
+	rawModule := ce.repository.GetContractRawModule(contractId)
 
 	// Create a new module from the raw binary
 	module, err := wasmtime.NewModule(ce.engine, rawModule)

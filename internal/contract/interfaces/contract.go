@@ -19,6 +19,7 @@ func NewContractMessage(contract, method string, args []byte, sender string) Con
 // ----------------------------------------------------------------------------
 
 type Transaction interface {
+	GetGasLimit() uint64
 	GetState() []byte
 	GetContractMessages() []ContractMessage
 }

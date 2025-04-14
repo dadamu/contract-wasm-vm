@@ -6,7 +6,7 @@ import (
 
 	"github.com/bytecodealliance/wasmtime-go/v31"
 
-	"github.com/dadamu/contract-wasmvm/internal/interfaces"
+	"github.com/dadamu/contract-wasmvm/internal/contract/interfaces"
 )
 
 func (e *Runtime) prepareLinker() *wasmtime.Linker {
@@ -44,11 +44,7 @@ func (e *Runtime) saveEntry() func(caller *wasmtime.Caller, idPtr int32, dataPtr
 		id := string(readBytes(caller, idPtr))
 
 		var dataBz = readBytes(caller, dataPtr)
-
-		err := e.repository.SaveEntity(id, e.contractId, dataBz)
-		if err != nil {
-			panic(err)
-		}
+		e.repository.SaveEntity(id, e.contractId, dataBz)
 	}
 }
 
@@ -60,14 +56,7 @@ func (e *Runtime) loadEntry() func(caller *wasmtime.Caller, idPtr int32) int32 {
 		// Read the id string
 		id := string(readBytes(caller, idPtr))
 
-		loaded, err := e.repository.LoadEntity(e.contractId, id)
-		if err != nil && err == fmt.Errorf("contract %s with id %s not found", e.contractId, id) {
-			// Write empty data to the memory if the entity is not found
-			return writeBytes(caller, []byte{})
-		} else if err != nil {
-			panic(err)
-		}
-
+		loaded := e.repository.LoadEntity(e.contractId, id)
 		return writeBytes(caller, loaded)
 	}
 }

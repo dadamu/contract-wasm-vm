@@ -3,7 +3,7 @@ package callbackqueue
 import (
 	"container/list"
 
-	"github.com/dadamu/contract-wasmvm/internal/interfaces"
+	"github.com/dadamu/contract-wasmvm/internal/contract/interfaces"
 )
 
 type CallbackQueue struct {
