@@ -1,6 +1,9 @@
 package store
 
 import (
+	"fmt"
+	"strconv"
+
 	"github.com/dadamu/contract-wasmvm/internal/contract/interfaces"
 )
 
@@ -38,6 +41,8 @@ func NewCacheKVStore(
 	}
 }
 
+// --------------------------------------------------------------
+
 func (ck *CacheKVStore) LoadEntity(
 	contractId, entityKey string,
 ) []byte {
@@ -53,11 +58,94 @@ func (ck *CacheKVStore) SaveEntity(
 	ck.set(key, data)
 }
 
-func (ck *CacheKVStore) GetContractRawModule(
+func (ck *CacheKVStore) GetContractCodeByContract(
 	contractId string,
-) []byte {
+) ([]byte, error) {
 	key := newContractModuleKey(contractId)
-	return ck.get(key)
+	if !ck.has(key) {
+		return nil, fmt.Errorf("contract does not exist: %s", contractId)
+	}
+
+	codeKey := ck.get(key)
+	return ck.get(codeKey), nil
+}
+
+func (ck *CacheKVStore) GetContractCodeById(
+	codeId uint64,
+) ([]byte, error) {
+	key := newContractCodeKey(codeId)
+	code := ck.get(key)
+	if code == nil {
+		return nil, fmt.Errorf("contract code not found for id: %d", codeId)
+	}
+	return code, nil
+}
+
+func (ck *CacheKVStore) CreateConctract(
+	codeId uint64,
+	contractId string,
+) error {
+	key := newContractModuleKey(contractId)
+	if ck.has(key) {
+		return fmt.Errorf("contract already exists: %s", contractId)
+	}
+	ck.set(key, newContractCodeKey(codeId))
+	return nil
+}
+
+func (ck *CacheKVStore) TryInitializeContract(
+	contractId string,
+) error {
+	key := newContractInitializedKey(contractId)
+	if ck.has(key) {
+		return fmt.Errorf("contract already initialized: %s", contractId)
+	}
+	ck.set(key, []byte{0x1})
+	return nil
+}
+
+func (ck *CacheKVStore) GetTotalContractAmount() uint64 {
+	key := []byte(CONTRACT_NEXT_CODE_ID_KEY)
+	if !ck.has(key) {
+		return 0
+	}
+	nextCodeIdBtyes := ck.get(key)
+	totalAmount, err := strconv.ParseUint(string(nextCodeIdBtyes), 10, 64)
+	if err != nil {
+		panic("failed to parse next code id")
+	}
+
+	return totalAmount
+}
+
+// --------------------------------------------------------------
+
+func (ck *CacheKVStore) StoreContractCode(
+	code []byte,
+) {
+	nextCodeIdBtyes := ck.get([]byte(CONTRACT_NEXT_CODE_ID_KEY))
+	if nextCodeIdBtyes == nil {
+		nextCodeIdBtyes = []byte("0")
+	}
+
+	nextCodeId, err := strconv.ParseUint(string(nextCodeIdBtyes), 10, 64)
+	if err != nil {
+		panic("failed to parse next code id")
+	}
+
+	key := newContractCodeKey(nextCodeId)
+	ck.set(key, code)
+	ck.set([]byte(CONTRACT_NEXT_CODE_ID_KEY), []byte(strconv.FormatUint(nextCodeId+1, 10)))
+}
+
+// --------------------------------------------------------------
+
+func (ck *CacheKVStore) has(key []byte) bool {
+	if cached, ok := ck.cache[string(key)]; ok {
+		return !cached.deleted
+	}
+
+	return ck.getFn(key) != nil
 }
 
 func (ck *CacheKVStore) get(key []byte) []byte {

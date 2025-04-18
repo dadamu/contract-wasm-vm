@@ -16,6 +16,42 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
+// MockVMMessage is a mock of VMMessage interface.
+type MockVMMessage struct {
+	ctrl     *gomock.Controller
+	recorder *MockVMMessageMockRecorder
+	isgomock struct{}
+}
+
+// MockVMMessageMockRecorder is the mock recorder for MockVMMessage.
+type MockVMMessageMockRecorder struct {
+	mock *MockVMMessage
+}
+
+// NewMockVMMessage creates a new mock instance.
+func NewMockVMMessage(ctrl *gomock.Controller) *MockVMMessage {
+	mock := &MockVMMessage{ctrl: ctrl}
+	mock.recorder = &MockVMMessageMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockVMMessage) EXPECT() *MockVMMessageMockRecorder {
+	return m.recorder
+}
+
+// IsVMMessage mocks base method.
+func (m *MockVMMessage) IsVMMessage() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "IsVMMessage")
+}
+
+// IsVMMessage indicates an expected call of IsVMMessage.
+func (mr *MockVMMessageMockRecorder) IsVMMessage() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsVMMessage", reflect.TypeOf((*MockVMMessage)(nil).IsVMMessage))
+}
+
 // MockTransaction is a mock of Transaction interface.
 type MockTransaction struct {
 	ctrl     *gomock.Controller
@@ -40,20 +76,6 @@ func (m *MockTransaction) EXPECT() *MockTransactionMockRecorder {
 	return m.recorder
 }
 
-// GetContractMessages mocks base method.
-func (m *MockTransaction) GetContractMessages() []interfaces.ContractMessage {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetContractMessages")
-	ret0, _ := ret[0].([]interfaces.ContractMessage)
-	return ret0
-}
-
-// GetContractMessages indicates an expected call of GetContractMessages.
-func (mr *MockTransactionMockRecorder) GetContractMessages() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContractMessages", reflect.TypeOf((*MockTransaction)(nil).GetContractMessages))
-}
-
 // GetGasLimit mocks base method.
 func (m *MockTransaction) GetGasLimit() uint64 {
 	m.ctrl.T.Helper()
@@ -66,6 +88,20 @@ func (m *MockTransaction) GetGasLimit() uint64 {
 func (mr *MockTransactionMockRecorder) GetGasLimit() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGasLimit", reflect.TypeOf((*MockTransaction)(nil).GetGasLimit))
+}
+
+// GetMessages mocks base method.
+func (m *MockTransaction) GetMessages() []interfaces.VMMessage {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMessages")
+	ret0, _ := ret[0].([]interfaces.VMMessage)
+	return ret0
+}
+
+// GetMessages indicates an expected call of GetMessages.
+func (mr *MockTransactionMockRecorder) GetMessages() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMessages", reflect.TypeOf((*MockTransaction)(nil).GetMessages))
 }
 
 // GetState mocks base method.

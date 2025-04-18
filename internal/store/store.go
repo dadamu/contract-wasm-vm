@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/cosmos/iavl"
-	"github.com/dadamu/contract-wasmvm/internal/contract/interfaces"
 )
 
 type Store struct {
@@ -46,7 +45,7 @@ func NewStore(tree *iavl.MutableTree) *Store {
 	}
 }
 
-func (s *Store) GetRepository() interfaces.IContractRepository {
+func (s *Store) GetCached() *CacheKVStore {
 	return s.cache
 }
 

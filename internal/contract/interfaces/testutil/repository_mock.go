@@ -39,18 +39,62 @@ func (m *MockIContractRepository) EXPECT() *MockIContractRepositoryMockRecorder 
 	return m.recorder
 }
 
-// GetContractRawModule mocks base method.
-func (m *MockIContractRepository) GetContractRawModule(contractId string) []byte {
+// CreateConctract mocks base method.
+func (m *MockIContractRepository) CreateConctract(codeId uint64, contractId string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetContractRawModule", contractId)
-	ret0, _ := ret[0].([]byte)
+	ret := m.ctrl.Call(m, "CreateConctract", codeId, contractId)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// GetContractRawModule indicates an expected call of GetContractRawModule.
-func (mr *MockIContractRepositoryMockRecorder) GetContractRawModule(contractId any) *gomock.Call {
+// CreateConctract indicates an expected call of CreateConctract.
+func (mr *MockIContractRepositoryMockRecorder) CreateConctract(codeId, contractId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContractRawModule", reflect.TypeOf((*MockIContractRepository)(nil).GetContractRawModule), contractId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateConctract", reflect.TypeOf((*MockIContractRepository)(nil).CreateConctract), codeId, contractId)
+}
+
+// GetContractCodeByContract mocks base method.
+func (m *MockIContractRepository) GetContractCodeByContract(contractId string) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetContractCodeByContract", contractId)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetContractCodeByContract indicates an expected call of GetContractCodeByContract.
+func (mr *MockIContractRepositoryMockRecorder) GetContractCodeByContract(contractId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContractCodeByContract", reflect.TypeOf((*MockIContractRepository)(nil).GetContractCodeByContract), contractId)
+}
+
+// GetContractCodeById mocks base method.
+func (m *MockIContractRepository) GetContractCodeById(codeId uint64) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetContractCodeById", codeId)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetContractCodeById indicates an expected call of GetContractCodeById.
+func (mr *MockIContractRepositoryMockRecorder) GetContractCodeById(codeId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContractCodeById", reflect.TypeOf((*MockIContractRepository)(nil).GetContractCodeById), codeId)
+}
+
+// GetTotalContractAmount mocks base method.
+func (m *MockIContractRepository) GetTotalContractAmount() uint64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTotalContractAmount")
+	ret0, _ := ret[0].(uint64)
+	return ret0
+}
+
+// GetTotalContractAmount indicates an expected call of GetTotalContractAmount.
+func (mr *MockIContractRepositoryMockRecorder) GetTotalContractAmount() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalContractAmount", reflect.TypeOf((*MockIContractRepository)(nil).GetTotalContractAmount))
 }
 
 // LoadEntity mocks base method.
@@ -77,4 +121,18 @@ func (m *MockIContractRepository) SaveEntity(contractId, key string, data []byte
 func (mr *MockIContractRepositoryMockRecorder) SaveEntity(contractId, key, data any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveEntity", reflect.TypeOf((*MockIContractRepository)(nil).SaveEntity), contractId, key, data)
+}
+
+// TryInitializeContract mocks base method.
+func (m *MockIContractRepository) TryInitializeContract(contractId string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TryInitializeContract", contractId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// TryInitializeContract indicates an expected call of TryInitializeContract.
+func (mr *MockIContractRepositoryMockRecorder) TryInitializeContract(contractId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TryInitializeContract", reflect.TypeOf((*MockIContractRepository)(nil).TryInitializeContract), contractId)
 }

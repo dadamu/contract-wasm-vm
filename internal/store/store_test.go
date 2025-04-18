@@ -18,7 +18,7 @@ type TestSuite struct {
 func (s *TestSuite) SetupTest() {
 	s.tree = iavl.NewMutableTree(dbm.NewMemDB(), 100, false, iavl.NewNopLogger())
 	s.store = NewStore(s.tree)
-	s.cache = s.store.GetRepository().(*CacheKVStore)
+	s.cache = s.store.GetCached()
 }
 
 func TestRuntimeTestSuite(t *testing.T) {
@@ -26,13 +26,6 @@ func TestRuntimeTestSuite(t *testing.T) {
 }
 
 // -----------------------------------------------------------------------------
-
-func (s *TestSuite) TestGetRepository() {
-	repository := s.store.GetRepository()
-	s.Require().NotNil(repository)
-	s.Require().IsType(&CacheKVStore{}, repository)
-	s.Require().Equal(s.store.cache, repository)
-}
 
 func (s *TestSuite) TestUncommit() {
 	s.cache.set([]byte("key1"), []byte("value1"))

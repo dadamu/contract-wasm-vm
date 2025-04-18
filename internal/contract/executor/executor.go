@@ -1,6 +1,11 @@
 package executor
 
 import (
+	"crypto/sha256"
+	"encoding/binary"
+	"fmt"
+
+	"github.com/btcsuite/btcutil/base58"
 	"github.com/bytecodealliance/wasmtime-go/v31"
 	callbackqueue "github.com/dadamu/contract-wasmvm/internal/contract/callback-queue"
 	"github.com/dadamu/contract-wasmvm/internal/contract/interfaces"
@@ -9,21 +14,66 @@ import (
 
 type ContractExecutor struct {
 	engine *wasmtime.Engine
-
-	repository interfaces.IContractRepository
 }
 
 func NewContractExecutor(
 	engine *wasmtime.Engine,
-	repository interfaces.IContractRepository,
 ) *ContractExecutor {
 	return &ContractExecutor{
-		engine:     engine,
-		repository: repository,
+		engine: engine,
 	}
 }
 
-func (ce *ContractExecutor) RunContractWithGasLimit(msg interfaces.ContractMessage, gasLimit uint64) (uint64, error) {
+func generateContractId(
+	state []byte,
+	codeId uint64,
+	salt []byte,
+) string {
+	codeIdBz := make([]byte, 8)
+	binary.LittleEndian.PutUint64(codeIdBz, codeId)
+	contractId := sha256.Sum256(append(state, append(codeIdBz, salt...)...))
+	return base58.Encode(contractId[:])
+}
+
+func (ce *ContractExecutor) InitializeContractWithGasLimit(
+	repository interfaces.IContractRepository,
+	state []byte,
+	codeId uint64,
+	args []byte,
+	gasLimit uint64,
+) (uint64, string, error) {
+	// Get the total contract amount as salt
+	amount := repository.GetTotalContractAmount()
+	salt := make([]byte, 8)
+	binary.LittleEndian.PutUint64(salt, amount)
+
+	contractId := generateContractId(state, codeId, salt)
+
+	err := repository.CreateConctract(codeId, contractId)
+	if err != nil {
+		return 0, "", err
+	}
+
+	remaining, err := ce.RunContractWithGasLimit(
+		repository,
+		state,
+		interfaces.ContractMessage{
+			Contract: contractId,
+			Method:   "init",
+			Args:     args,
+		},
+		gasLimit,
+	)
+
+	return remaining, contractId, err
+}
+
+func (ce *ContractExecutor) RunContractWithGasLimit(
+	repository interfaces.IContractRepository,
+	state []byte,
+	msg interfaces.ContractMessage,
+	gasLimit uint64,
+) (uint64, error) {
 	callbackQueue := callbackqueue.NewCallbackQueue()
 
 	// Enqueue the initial contract call
@@ -31,7 +81,9 @@ func (ce *ContractExecutor) RunContractWithGasLimit(msg interfaces.ContractMessa
 	callbackQueue.Enqueue(msg)
 
 	for msg, found := callbackQueue.Dequeue(); found; {
-		remaining, err := ce.runContract(callbackQueue, msg, gasLimit)
+
+		// Run the contract with the current gas limit
+		remaining, err := ce.runContract(callbackQueue, repository, state, msg, gasLimit)
 		if err != nil {
 			return 0, err
 		}
@@ -43,24 +95,45 @@ func (ce *ContractExecutor) RunContractWithGasLimit(msg interfaces.ContractMessa
 	return gasLimit, nil
 }
 
-func (ce *ContractExecutor) runContract(callbackQueue *callbackqueue.CallbackQueue, msg interfaces.ContractMessage, gasLimit uint64) (uint64, error) {
-	module, err := ce.loadContract(msg.Contract)
+func (ce *ContractExecutor) runContract(
+	callbackQueue *callbackqueue.CallbackQueue,
+	repository interfaces.IContractRepository,
+	state []byte,
+	msg interfaces.ContractMessage,
+	gasLimit uint64,
+) (uint64, error) {
+	// Load the contract code from the repository
+	module, err := ce.loadContract(repository, msg.Contract)
 	if err != nil {
 		return 0, err
 	}
 
-	runtime := runtime.NewRuntimeFromModule(callbackQueue, ce.engine, msg.Contract, ce.repository, module, gasLimit)
+	if msg.Method == "init" {
+		err := repository.TryInitializeContract(msg.Contract)
+		if err != nil {
+			return 0, fmt.Errorf("failed to initialize contract: %w", err)
+		}
+	}
 
-	// TODO: Add state for run instead of nil
-	return runtime.Run(nil, msg)
+	// Execute the contract
+	runtime := runtime.NewRuntimeFromModule(callbackQueue, ce.engine, msg.Contract, repository, module, gasLimit)
+	remaining, err := runtime.Run(state, msg)
+	if err != nil {
+		return 0, fmt.Errorf("failed to run contract: %w", err)
+	}
+
+	return remaining, nil
 }
 
-func (ce *ContractExecutor) loadContract(contractId string) (*wasmtime.Module, error) {
-	// Load the raw binary module from the repository
-	rawModule := ce.repository.GetContractRawModule(contractId)
+func (ce *ContractExecutor) loadContract(repository interfaces.IContractRepository, contractId string) (*wasmtime.Module, error) {
+	// Load the code from the repository
+	code, err := repository.GetContractCodeByContract(contractId)
+	if err != nil {
+		return nil, err
+	}
 
 	// Create a new module from the raw binary
-	module, err := wasmtime.NewModule(ce.engine, rawModule)
+	module, err := wasmtime.NewModule(ce.engine, code)
 	if err != nil {
 		return nil, err
 	}

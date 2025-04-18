@@ -11,6 +11,7 @@ require (
 
 require (
 	cosmossdk.io/core v0.12.1-0.20240725072823-6a2d039e1212 // indirect
+	github.com/btcsuite/btcutil v1.0.2 // indirect
 	github.com/cosmos/gogoproto v1.5.0 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
