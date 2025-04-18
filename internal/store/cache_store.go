@@ -118,8 +118,6 @@ func (ck *CacheKVStore) GetTotalContractAmount() uint64 {
 	return totalAmount
 }
 
-// --------------------------------------------------------------
-
 func (ck *CacheKVStore) StoreContractCode(
 	code []byte,
 ) {
