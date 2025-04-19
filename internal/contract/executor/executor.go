@@ -72,7 +72,7 @@ func (ce *ContractExecutor) RunContract(
 	gasLimit uint64,
 ) (uint64, *callbackqueue.CallbackQueue, []interfaces.ResultEvent, error) {
 	callbackQueue := callbackqueue.NewCallbackQueue()
-	resultEvents := make([]interfaces.ResultEvent, 0)
+	resultEvents := []interfaces.ResultEvent{}
 
 	// Enqueue the initial contract call
 	// This is the first contract call that will be executed
@@ -81,7 +81,7 @@ func (ce *ContractExecutor) RunContract(
 	for msg, found := callbackQueue.Dequeue(); found; {
 
 		// Run the contract with the current gas limit
-		remaining, err := ce.runMessage(callbackQueue, resultEvents, repository, state, msg, gasLimit)
+		remaining, err := ce.runMessage(callbackQueue, &resultEvents, repository, state, msg, gasLimit)
 		if err != nil {
 			return 0, callbackQueue, resultEvents, err
 		}
@@ -95,7 +95,7 @@ func (ce *ContractExecutor) RunContract(
 
 func (ce *ContractExecutor) runMessage(
 	callbackQueue *callbackqueue.CallbackQueue,
-	resultEvents []interfaces.ResultEvent,
+	resultEvents *[]interfaces.ResultEvent,
 	repository interfaces.IContractRepository,
 	state []byte,
 	msg interfaces.ContractMessage,
@@ -113,7 +113,7 @@ func (ce *ContractExecutor) runMessage(
 			return 0, fmt.Errorf("failed to initialize contract: %w", err)
 		}
 
-		resultEvents = append(resultEvents, interfaces.ResultEvent{
+		*resultEvents = append(*resultEvents, interfaces.ResultEvent{
 			ContractId: msg.Contract,
 			Event:      "initialized",
 			Data:       "true",

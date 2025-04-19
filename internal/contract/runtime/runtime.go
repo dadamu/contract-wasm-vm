@@ -11,7 +11,7 @@ import (
 
 type Runtime struct {
 	callbackQueue *callbackqueue.CallbackQueue
-	resultEvents  []interfaces.ResultEvent
+	resultEvents  *[]interfaces.ResultEvent
 
 	engine   *wasmtime.Engine
 	store    *wasmtime.Store
@@ -25,7 +25,7 @@ type Runtime struct {
 func NewRuntimeFromModule(
 	engine *wasmtime.Engine,
 	callbackQueue *callbackqueue.CallbackQueue,
-	resultEvents []interfaces.ResultEvent,
+	resultEvents *[]interfaces.ResultEvent,
 	repository interfaces.IContractRepository,
 	module *wasmtime.Module,
 

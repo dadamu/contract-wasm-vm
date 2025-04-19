@@ -17,7 +17,12 @@ namespace contract {
   ): ArrayBuffer;
 }
 
+namespace event {
+  export declare function emit(event: string, data: string): void;
+}
+
 export const save = db.save;
 export const load = db.load;
 export const contractCall = contract.call;
 export const createContract = contract.create;
+export const emitEvent = event.emit;

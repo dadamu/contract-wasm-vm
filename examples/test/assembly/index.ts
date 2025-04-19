@@ -67,3 +67,11 @@ export function createContract(
   const argsBuffer = String.UTF8.encode("args");
   runtime.createContract(1, argsBuffer);
 }
+
+export function emitEvent(
+  state: ArrayBuffer,
+  sender: ArrayBuffer,
+  args: ArrayBuffer
+): void {
+  runtime.emitEvent("event", "data");
+}

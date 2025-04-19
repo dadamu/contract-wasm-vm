@@ -34,6 +34,11 @@ func (e *Runtime) prepareLinker() *wasmtime.Linker {
 		panic(err)
 	}
 
+	// Add event.emit function
+	if err := linker.DefineFunc(e.store, "runtime", "event.emit", e.emitEventEntry()); err != nil {
+		panic(err)
+	}
+
 	// Add env.abort function
 	if err := linker.DefineFunc(e.store, "env", "abort", e.abortEntry()); err != nil {
 		panic(err)
@@ -100,10 +105,6 @@ func (e *Runtime) createContractEntry() func(caller *wasmtime.Caller, codeId int
 		binary.LittleEndian.PutUint64(salt, amount)
 
 		contractId := generateContractId(e.state, uint64(codeId), salt)
-
-		fmt.Println("create code id:", codeId)
-		fmt.Println("create contract:", contractId)
-
 		err := e.repository.CreateConctract(uint64(codeId), contractId)
 		if err != nil {
 			panic(err)
@@ -123,6 +124,21 @@ func (e *Runtime) createContractEntry() func(caller *wasmtime.Caller, codeId int
 		// Return the contract ID as a pointer to the caller
 		contractIdPtr := writeBytes(caller, []byte(contractId))
 		return contractIdPtr
+	}
+}
+
+func (e *Runtime) emitEventEntry() func(caller *wasmtime.Caller, eventPtr int32, dataPtr int32) {
+	return func(caller *wasmtime.Caller, eventPtr int32, dataPtr int32) {
+		// Consume fuel
+
+		event := readUTF16EncodedString(readBytes(caller, eventPtr))
+		data := readUTF16EncodedString(readBytes(caller, dataPtr))
+
+		*e.resultEvents = append(*e.resultEvents, interfaces.ResultEvent{
+			ContractId: e.contractId,
+			Event:      event,
+			Data:       data,
+		})
 	}
 }
 

@@ -17,7 +17,7 @@ import (
 type RuntimeTestSuite struct {
 	suite.Suite
 	queue      *callbackqueue.CallbackQueue
-	events     []interfaces.ResultEvent
+	events     *[]interfaces.ResultEvent
 	repository *testutil.MockIContractRepository
 	runtime    *Runtime
 }
@@ -33,7 +33,7 @@ func (suite *RuntimeTestSuite) SetupTest() {
 
 	suite.repository = testutil.NewMockIContractRepository(gomockCtrl)
 	suite.queue = callbackqueue.NewCallbackQueue()
-	suite.events = make([]interfaces.ResultEvent, 0)
+	suite.events = &[]interfaces.ResultEvent{}
 
 	config := wasmtime.NewConfig()
 	config.SetConsumeFuel(true)
@@ -128,4 +128,15 @@ func (s *RuntimeTestSuite) TestCreateContract() {
 	s.Require().Equal("init", msg.Method)
 	s.Require().Equal([]byte("args"), msg.Args)
 	s.Require().Equal(s.runtime.contractId, msg.Sender)
+}
+
+func (s *RuntimeTestSuite) TestEmitEvent() {
+	_, err := s.runtime.Run(interfaces.NewContractMessage("contractId", "emitEvent", []byte{}, "sender"))
+	s.Require().NoError(err)
+
+	event := (*s.events)[0]
+
+	s.Require().Equal("contractId", event.ContractId)
+	s.Require().Equal("event", event.Event)
+	s.Require().Equal("data", event.Data)
 }
