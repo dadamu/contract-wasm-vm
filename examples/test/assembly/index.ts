@@ -1,6 +1,12 @@
 // The entry file of your WebAssembly module.
 import * as runtime from "./runtime";
 
+export function init(
+  state: ArrayBuffer,
+  sender: ArrayBuffer,
+  args: ArrayBuffer
+): void {}
+
 export function addOne(
   state: ArrayBuffer,
   sender: ArrayBuffer,
@@ -51,4 +57,13 @@ export function infiniteLoop(
   while (true) {
     // Do nothing
   }
+}
+
+export function createContract(
+  state: ArrayBuffer,
+  sender: ArrayBuffer,
+  args: ArrayBuffer
+): void {
+  const argsBuffer = String.UTF8.encode("args");
+  runtime.createContract(1, argsBuffer);
 }

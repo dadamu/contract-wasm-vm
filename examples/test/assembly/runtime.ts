@@ -10,8 +10,14 @@ namespace contract {
     method: ArrayBuffer,
     args: ArrayBuffer
   ): void;
+
+  export declare function create(
+    codeId: i32,
+    initArgs: ArrayBuffer
+  ): ArrayBuffer;
 }
 
 export const save = db.save;
 export const load = db.load;
 export const contractCall = contract.call;
+export const createContract = contract.create;

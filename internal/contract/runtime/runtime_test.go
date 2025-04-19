@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"encoding/binary"
 	"os"
 	"testing"
 
@@ -104,4 +105,24 @@ func (s *RuntimeTestSuite) TestContractCall() {
 	s.Require().Equal("contract", msg.Contract)
 	s.Require().Equal("method", msg.Method)
 	s.Require().Equal([]byte("args"), msg.Args)
+}
+
+func (s *RuntimeTestSuite) TestCreateContract() {
+	salt := make([]byte, 8)
+	binary.LittleEndian.PutUint64(salt, 1)
+
+	contractId := generateContractId(s.runtime.state, uint64(1), salt)
+
+	s.repository.EXPECT().GetTotalContractAmount().Return(uint64(1))
+	s.repository.EXPECT().CreateConctract(uint64(1), contractId)
+
+	_, err := s.runtime.Run(interfaces.NewContractMessage("contractId", "createContract", []byte{}, "sender"))
+	s.Require().NoError(err)
+
+	msg, found := s.queue.Dequeue()
+	s.Require().True(found)
+	s.Require().Equal(contractId, msg.Contract)
+	s.Require().Equal("init", msg.Method)
+	s.Require().Equal([]byte("args"), msg.Args)
+	s.Require().Equal(s.runtime.contractId, msg.Sender)
 }

@@ -29,6 +29,11 @@ func (e *Runtime) prepareLinker() *wasmtime.Linker {
 		panic(err)
 	}
 
+	// Add contract.create function
+	if err := linker.DefineFunc(e.store, "runtime", "contract.create", e.createContractEntry()); err != nil {
+		panic(err)
+	}
+
 	// Add env.abort function
 	if err := linker.DefineFunc(e.store, "env", "abort", e.abortEntry()); err != nil {
 		panic(err)
@@ -82,6 +87,42 @@ func (e *Runtime) callEntry() func(caller *wasmtime.Caller, contractIdPtr int32,
 				e.contractId,
 			),
 		)
+	}
+}
+
+func (e *Runtime) createContractEntry() func(caller *wasmtime.Caller, codeId int32, initArgsPtr int32) int32 {
+	return func(caller *wasmtime.Caller, codeId int32, initArgsPtr int32) int32 {
+		// TODO: consume fuel
+
+		// Get the total contract amount as salt
+		amount := e.repository.GetTotalContractAmount()
+		salt := make([]byte, 8)
+		binary.LittleEndian.PutUint64(salt, amount)
+
+		contractId := generateContractId(e.state, uint64(codeId), salt)
+
+		fmt.Println("create code id:", codeId)
+		fmt.Println("create contract:", contractId)
+
+		err := e.repository.CreateConctract(uint64(codeId), contractId)
+		if err != nil {
+			panic(err)
+		}
+
+		initArgs := readBytes(caller, initArgsPtr)
+
+		e.callbackQueue.Enqueue(
+			interfaces.NewContractMessage(
+				contractId,
+				"init",
+				initArgs,
+				e.contractId,
+			),
+		)
+
+		// Return the contract ID as a pointer to the caller
+		contractIdPtr := writeBytes(caller, []byte(contractId))
+		return contractIdPtr
 	}
 }
 
