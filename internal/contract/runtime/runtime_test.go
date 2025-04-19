@@ -24,7 +24,7 @@ func (suite *RuntimeTestSuite) SetupTest() {
 	gomockCtrl := gomock.NewController(suite.T())
 
 	// Read wasm from file
-	wasmFile, err := os.ReadFile("testdata/release.wasm")
+	wasmFile, err := os.ReadFile("testdata/test.wasm")
 	if err != nil {
 		suite.T().Fatalf("failed to read module: %v", err)
 	}

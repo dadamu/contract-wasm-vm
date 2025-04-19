@@ -19,7 +19,7 @@ func BenchmarkRuntimeAddOne(b *testing.B) {
 
 	engine := wasmtime.NewEngine()
 	// Read wasm from file
-	wasmFile, err := os.ReadFile("testdata/release.wasm")
+	wasmFile, err := os.ReadFile("testdata/test.wasm")
 	if err != nil {
 		b.Fatalf("failed to read module: %v", err)
 	}
