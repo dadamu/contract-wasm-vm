@@ -81,7 +81,7 @@ func (ce *ContractExecutor) RunContract(
 	for msg, found := callbackQueue.Dequeue(); found; {
 
 		// Run the contract with the current gas limit
-		remaining, err := ce.runContract(callbackQueue, resultEvents, repository, state, msg, gasLimit)
+		remaining, err := ce.runMessage(callbackQueue, resultEvents, repository, state, msg, gasLimit)
 		if err != nil {
 			return 0, callbackQueue, resultEvents, err
 		}
@@ -93,7 +93,7 @@ func (ce *ContractExecutor) RunContract(
 	return gasLimit, callbackQueue, resultEvents, nil
 }
 
-func (ce *ContractExecutor) runContract(
+func (ce *ContractExecutor) runMessage(
 	callbackQueue *callbackqueue.CallbackQueue,
 	resultEvents []interfaces.ResultEvent,
 	repository interfaces.IContractRepository,
