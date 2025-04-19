@@ -61,7 +61,7 @@ func (r *TxRunner) runMessage(state []byte, msg interfaces.VMMessage, gasLimit u
 		return 0, fmt.Errorf("initialize contract message not supported")
 
 	case interfaces.ContractMessage:
-		remaining, err := r.runContract(state, msg, gasLimit)
+		remaining, err := r.executor.RunContract(r.store, state, msg, gasLimit)
 		if err != nil {
 			r.store.Rollback()
 			return 0, err
@@ -93,8 +93,4 @@ func (r *TxRunner) deployContract(msg interfaces.DeployContractCodeMessage, gasL
 	gasLimit -= consumed
 
 	return gasLimit, nil
-}
-
-func (r *TxRunner) runContract(state []byte, msg interfaces.ContractMessage, gasLimit uint64) (uint64, error) {
-	return r.executor.RunContract(r.store, state, msg, gasLimit)
 }
