@@ -17,6 +17,7 @@ import (
 type RuntimeTestSuite struct {
 	suite.Suite
 	queue      *callbackqueue.CallbackQueue
+	events     []interfaces.ResultEvent
 	repository *testutil.MockIContractRepository
 	runtime    *Runtime
 }
@@ -32,6 +33,7 @@ func (suite *RuntimeTestSuite) SetupTest() {
 
 	suite.repository = testutil.NewMockIContractRepository(gomockCtrl)
 	suite.queue = callbackqueue.NewCallbackQueue()
+	suite.events = make([]interfaces.ResultEvent, 0)
 
 	config := wasmtime.NewConfig()
 	config.SetConsumeFuel(true)
@@ -44,6 +46,7 @@ func (suite *RuntimeTestSuite) SetupTest() {
 	suite.runtime = NewRuntimeFromModule(
 		engine,
 		suite.queue,
+		suite.events,
 		suite.repository,
 		module,
 

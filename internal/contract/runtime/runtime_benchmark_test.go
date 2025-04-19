@@ -33,6 +33,7 @@ func BenchmarkRuntimeAddOne(b *testing.B) {
 	runtime := NewRuntimeFromModule(
 		engine,
 		callbackqueue.NewCallbackQueue(),
+		make([]interfaces.ResultEvent, 0),
 		repository,
 		module,
 

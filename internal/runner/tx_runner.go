@@ -27,39 +27,41 @@ func NewTxRunner(
 	}
 }
 
-func (r *TxRunner) RunTransaction(tx interfaces.Transaction) (uint64, []*callbackqueue.CallbackQueue, error) {
+func (r *TxRunner) RunTransaction(tx interfaces.Transaction) (uint64, []*callbackqueue.CallbackQueue, []interfaces.ResultEvent, error) {
 	gasLimit := tx.GetGasLimit()
 
 	msgs := tx.GetMessages()
 	state := tx.GetState()
 
-	queues := make([]*callbackqueue.CallbackQueue, 0)
+	callbackQueues := make([]*callbackqueue.CallbackQueue, 0)
+	resultEvents := make([]interfaces.ResultEvent, 0)
 	for _, msg := range msgs {
-		remaining, callbackQueue, err := r.runMessage(state, msg, gasLimit)
+		remaining, queue, events, err := r.runMessage(state, msg, gasLimit)
 		if err != nil {
-			return 0, nil, err
+			return 0, nil, nil, err
 		}
 
 		gasLimit = remaining
-		queues = append(queues, callbackQueue)
+		callbackQueues = append(callbackQueues, queue)
+		resultEvents = append(resultEvents, events...)
 	}
 
-	return gasLimit, queues, nil
+	return gasLimit, callbackQueues, resultEvents, nil
 }
 
-func (r *TxRunner) runMessage(state []byte, msg interfaces.VMMessage, gasLimit uint64) (uint64, *callbackqueue.CallbackQueue, error) {
+func (r *TxRunner) runMessage(state []byte, msg interfaces.VMMessage, gasLimit uint64) (uint64, *callbackqueue.CallbackQueue, []interfaces.ResultEvent, error) {
 	switch msg := msg.(type) {
 
 	case interfaces.DeployContractCodeMessage:
 		remaining, err := r.deployContract(msg, gasLimit)
 		if err != nil {
 			r.store.Rollback()
-			return 0, nil, err
+			return 0, nil, nil, err
 		}
-		return remaining, nil, nil
+		return remaining, nil, nil, nil
 
 	case interfaces.InitializeContractMessage:
-		remaining, callbackQueue, err := r.executor.CreateContract(
+		remaining, callbackQueue, resultEvents, err := r.executor.InitializeContract(
 			r.store,
 			state,
 			msg.CodeId,
@@ -68,17 +70,17 @@ func (r *TxRunner) runMessage(state []byte, msg interfaces.VMMessage, gasLimit u
 		)
 		if err != nil {
 			r.store.Rollback()
-			return 0, callbackQueue, err
+			return 0, callbackQueue, resultEvents, err
 		}
-		return remaining, callbackQueue, nil
+		return remaining, callbackQueue, resultEvents, nil
 
 	case interfaces.ContractMessage:
-		remaining, callbackQueue, err := r.executor.RunContract(r.store, state, msg, gasLimit)
+		remaining, callbackQueue, resultEvents, err := r.executor.RunContract(r.store, state, msg, gasLimit)
 		if err != nil {
 			r.store.Rollback()
-			return 0, callbackQueue, err
+			return 0, callbackQueue, resultEvents, err
 		}
-		return remaining, callbackQueue, nil
+		return remaining, callbackQueue, resultEvents, nil
 
 	default:
 		panic("unknown message type")
