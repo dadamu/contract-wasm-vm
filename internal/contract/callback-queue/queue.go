@@ -1,22 +1,21 @@
 package callbackqueue
 
 import (
-	"container/list"
-
 	"github.com/dadamu/contract-wasmvm/internal/contract/interfaces"
 )
 
 type CallbackQueue struct {
-	container *list.List
+	container []interfaces.ContractMessage
+	head      int
 }
 
 func NewCallbackQueue() *CallbackQueue {
 	return &CallbackQueue{
-		container: list.New(),
+		container: make([]interfaces.ContractMessage, 0),
 	}
 }
 func (q *CallbackQueue) Enqueue(msg interfaces.ContractMessage) {
-	q.container.PushBack(msg)
+	q.container = append(q.container, msg)
 }
 
 func (q *CallbackQueue) Dequeue() (interfaces.ContractMessage, bool) {
@@ -24,11 +23,15 @@ func (q *CallbackQueue) Dequeue() (interfaces.ContractMessage, bool) {
 		return interfaces.ContractMessage{}, false
 	}
 
-	front := q.container.Front()
-	q.container.Remove(front)
-	return front.Value.(interfaces.ContractMessage), true
+	msg := q.container[q.head]
+	q.head += 1
+	return msg, true
 }
 
 func (q *CallbackQueue) IsEmpty() bool {
-	return q.container.Len() == 0
+	return q.head >= len(q.container)
+}
+
+func (q *CallbackQueue) All() []interfaces.ContractMessage {
+	return q.container
 }
