@@ -115,8 +115,8 @@ func (ce *ContractExecutor) runContract(
 	}
 
 	// Execute the contract
-	runtime := runtime.NewRuntimeFromModule(callbackQueue, ce.engine, msg.Contract, repository, module, gasLimit)
-	remaining, err := runtime.Run(state, msg)
+	runtime := runtime.NewRuntimeFromModule(ce.engine, callbackQueue, repository, module, state, msg.Contract, gasLimit)
+	remaining, err := runtime.Run(msg)
 	if err != nil {
 		return 0, fmt.Errorf("failed to run contract: %w", err)
 	}

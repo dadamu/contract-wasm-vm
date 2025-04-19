@@ -16,23 +16,28 @@ type Runtime struct {
 	store    *wasmtime.Store
 	instance *wasmtime.Instance
 
+	state      []byte
 	contractId string
 	repository interfaces.IContractRepository
 }
 
 func NewRuntimeFromModule(
-	callbackQueue *callbackqueue.CallbackQueue,
 	engine *wasmtime.Engine,
-	contractId string,
+	callbackQueue *callbackqueue.CallbackQueue,
 	repository interfaces.IContractRepository,
 	module *wasmtime.Module,
+
+	state []byte,
+	contractId string,
 	gasLimit uint64,
 ) *Runtime {
 	runtime := &Runtime{
+		repository:    repository,
 		callbackQueue: callbackQueue,
 		engine:        engine,
-		contractId:    contractId,
-		repository:    repository,
+
+		state:      state,
+		contractId: contractId,
 	}
 
 	instance := runtime.newInstanceFromModule(module, gasLimit)
@@ -58,7 +63,7 @@ func (e *Runtime) newInstanceFromModule(module *wasmtime.Module, gasLimit uint64
 	return instance
 }
 
-func (e *Runtime) Run(state []byte, msg interfaces.ContractMessage) (remainingGas uint64, err error) {
+func (e *Runtime) Run(msg interfaces.ContractMessage) (remainingGas uint64, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("panic: %v", r)
@@ -71,7 +76,7 @@ func (e *Runtime) Run(state []byte, msg interfaces.ContractMessage) (remainingGa
 	}
 
 	senderPtr := e.writeBytesByInstance([]byte(msg.Sender))
-	statePtr := e.writeBytesByInstance(state)
+	statePtr := e.writeBytesByInstance(e.state)
 	argsPtr := e.writeBytesByInstance(msg.Args)
 
 	// Call the run function with the pointer to the golobal state and args

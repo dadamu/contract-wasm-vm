@@ -1,9 +1,11 @@
 package runtime
 
 import (
+	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
 
+	"github.com/btcsuite/btcutil/base58"
 	"github.com/bytecodealliance/wasmtime-go/v31"
 
 	"github.com/dadamu/contract-wasmvm/internal/contract/interfaces"
@@ -44,7 +46,7 @@ func (e *Runtime) saveEntry() func(caller *wasmtime.Caller, idPtr int32, dataPtr
 		id := string(readBytes(caller, idPtr))
 
 		var dataBz = readBytes(caller, dataPtr)
-		e.repository.SaveEntity(id, e.contractId, dataBz)
+		e.repository.SaveEntity(e.contractId, id, dataBz)
 	}
 }
 
@@ -129,4 +131,15 @@ func readUTF16EncodedString(bz []byte) string {
 		decoded = append(decoded, bz[i])
 	}
 	return string(decoded)
+}
+
+func generateContractId(
+	state []byte,
+	codeId uint64,
+	salt []byte,
+) string {
+	codeIdBz := make([]byte, 8)
+	binary.LittleEndian.PutUint64(codeIdBz, codeId)
+	contractId := sha256.Sum256(append(state, append(codeIdBz, salt...)...))
+	return base58.Encode(contractId[:])
 }

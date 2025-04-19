@@ -35,21 +35,21 @@ func (suite *RuntimeTestSuite) SetupTest() {
 	config := wasmtime.NewConfig()
 	config.SetConsumeFuel(true)
 	engine := wasmtime.NewEngineWithConfig(config)
-	modele, err := wasmtime.NewModule(engine, wasmFile)
+	module, err := wasmtime.NewModule(engine, wasmFile)
 	if err != nil {
 		suite.T().Fatalf("failed to create module: %v", err)
 	}
 
-	runtime := NewRuntimeFromModule(
-		suite.queue,
+	suite.runtime = NewRuntimeFromModule(
 		engine,
-		"test",
+		suite.queue,
 		suite.repository,
-		modele,
+		module,
+
+		[]byte("state"),
+		"contractId",
 		20_000,
 	)
-
-	suite.runtime = runtime
 }
 
 func TestRuntimeTestSuite(t *testing.T) {
@@ -59,7 +59,7 @@ func TestRuntimeTestSuite(t *testing.T) {
 // -----------------------------------------------------------------------------
 
 func (s *RuntimeTestSuite) TestInfiniteLoop() {
-	_, err := s.runtime.Run(nil, interfaces.NewContractMessage("test", "infiniteLoop", []byte{}, "sender"))
+	_, err := s.runtime.Run(interfaces.NewContractMessage("contractId", "infiniteLoop", []byte{}, "sender"))
 	s.Require().Error(err)
 	s.Require().Contains(err.Error(), "wasm trap: all fuel consumed by WebAssembly")
 }
@@ -69,10 +69,10 @@ func (s *RuntimeTestSuite) TestSaveAndLoad() {
 	loadedValue := []byte{1, 0, 0, 0} // Initial value: 1
 	savedValue := []byte{2, 0, 0, 0}  // Expected value after increment: 2
 
-	s.repository.EXPECT().LoadEntity("test", "test").Return(loadedValue)
-	s.repository.EXPECT().SaveEntity("test", "test", savedValue)
+	s.repository.EXPECT().LoadEntity("contractId", "test").Return(loadedValue)
+	s.repository.EXPECT().SaveEntity("contractId", "test", savedValue)
 
-	_, err := s.runtime.Run(nil, interfaces.NewContractMessage("test", "addOne", []byte{}, "sender"))
+	_, err := s.runtime.Run(interfaces.NewContractMessage("contractId", "addOne", []byte{}, "sender"))
 	s.Require().NoError(err)
 }
 
@@ -81,22 +81,22 @@ func (s *RuntimeTestSuite) TestGasRemaining() {
 	loadedValue := []byte{1, 0, 0, 0} // Initial value: 1
 	savedValue := []byte{2, 0, 0, 0}  // Expected value after increment: 2
 
-	s.repository.EXPECT().LoadEntity("test", "test").Return(loadedValue)
-	s.repository.EXPECT().SaveEntity("test", "test", savedValue)
+	s.repository.EXPECT().LoadEntity("contractId", "test").Return(loadedValue)
+	s.repository.EXPECT().SaveEntity("contractId", "test", savedValue)
 
-	remaining, err := s.runtime.Run(nil, interfaces.NewContractMessage("test", "addOne", []byte{}, "sender"))
+	remaining, err := s.runtime.Run(interfaces.NewContractMessage("contractId", "addOne", []byte{}, "sender"))
 	s.Require().NoError(err)
 	s.Require().Equal(uint64(7_603), remaining)
 }
 
 func (s *RuntimeTestSuite) TestCrash() {
-	_, err := s.runtime.Run(nil, interfaces.NewContractMessage("test", "crash", []byte{}, "sender"))
+	_, err := s.runtime.Run(interfaces.NewContractMessage("contractId", "crash", []byte{}, "sender"))
 	s.Require().Error(err)
 	s.Require().Contains(err.Error(), "WASM called abort msg:")
 }
 
 func (s *RuntimeTestSuite) TestContractCall() {
-	_, err := s.runtime.Run(nil, interfaces.NewContractMessage("test", "callback", []byte{}, "sender"))
+	_, err := s.runtime.Run(interfaces.NewContractMessage("contractId", "callback", []byte{}, "sender"))
 	s.Require().NoError(err)
 
 	msg, found := s.queue.Dequeue()

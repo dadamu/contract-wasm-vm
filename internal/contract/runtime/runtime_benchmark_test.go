@@ -31,11 +31,13 @@ func BenchmarkRuntimeAddOne(b *testing.B) {
 
 	repository := testutil.NewMockIContractRepository(ctrl)
 	runtime := NewRuntimeFromModule(
-		callbackqueue.NewCallbackQueue(),
 		engine,
-		"test",
+		callbackqueue.NewCallbackQueue(),
 		repository,
 		module,
+
+		[]byte("state"),
+		"contractId",
 		100_000,
 	)
 
@@ -44,18 +46,18 @@ func BenchmarkRuntimeAddOne(b *testing.B) {
 	savedValue := []byte{2, 0, 0, 0}
 
 	repository.EXPECT().
-		LoadEntity("test", "test").
+		LoadEntity("contractId", "test").
 		Return(loadedValue).
 		AnyTimes()
 
 	repository.EXPECT().
-		SaveEntity("test", "test", savedValue).
+		SaveEntity("contractId", "test", savedValue).
 		AnyTimes()
 
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, err := runtime.Run(nil, interfaces.NewContractMessage("test", "addOne", []byte{}, "sender"))
+		_, err := runtime.Run(interfaces.NewContractMessage("contractId", "addOne", []byte{}, "sender"))
 		if err != nil {
 			b.Fatalf("failed to run addOne: %v", err)
 		}
