@@ -12,11 +12,8 @@ export function addOne(
   sender: ArrayBuffer,
   args: ArrayBuffer
 ): void {
-  const id = "test";
-  const idBuffer = String.UTF8.encode(id);
-
   // Load and parse the current count
-  const count = runtime.load(idBuffer);
+  const count = runtime.load("test");
   let newCount = 1;
   if (count.byteLength !== 0) {
     const countView = new DataView(count);
@@ -27,7 +24,7 @@ export function addOne(
   const newCountBuffer = new ArrayBuffer(4);
   const newCountView = new DataView(newCountBuffer);
   newCountView.setInt32(0, newCount, true);
-  runtime.save(idBuffer, newCountBuffer);
+  runtime.save("test", newCountBuffer);
 }
 
 export function crash(
@@ -43,10 +40,8 @@ export function callback(
   sender: ArrayBuffer,
   args: ArrayBuffer
 ): void {
-  const contractIdBuffer = String.UTF8.encode("contract");
-  const methodBuffer = String.UTF8.encode("method");
   const argsBuffer = String.UTF8.encode("args");
-  runtime.contractCall(contractIdBuffer, methodBuffer, argsBuffer);
+  runtime.contractCall("contract", "method", argsBuffer);
 }
 
 export function infiniteLoop(

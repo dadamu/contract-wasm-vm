@@ -1,13 +1,13 @@
 namespace db {
-  export declare function save(key: ArrayBuffer, value: ArrayBuffer): void;
+  export declare function save(key: string, value: ArrayBuffer): void;
 
-  export declare function load(key: ArrayBuffer): ArrayBuffer;
+  export declare function load(key: string): ArrayBuffer;
 }
 
 namespace contract {
   export declare function call(
-    id: ArrayBuffer,
-    method: ArrayBuffer,
+    id: string,
+    method: string,
     args: ArrayBuffer
   ): void;
 

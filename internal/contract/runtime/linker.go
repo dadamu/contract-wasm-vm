@@ -53,7 +53,7 @@ func (e *Runtime) saveEntry() func(caller *wasmtime.Caller, idPtr int32, dataPtr
 		// TODO: consume fuel
 
 		// Read the id string
-		id := string(readBytes(caller, idPtr))
+		id := readUTF16EncodedString(readBytes(caller, idPtr))
 
 		var dataBz = readBytes(caller, dataPtr)
 		e.repository.SaveEntity(e.contractId, id, dataBz)
@@ -66,7 +66,7 @@ func (e *Runtime) loadEntry() func(caller *wasmtime.Caller, idPtr int32) int32 {
 		// TODO: consume fuel
 
 		// Read the id string
-		id := string(readBytes(caller, idPtr))
+		id := readUTF16EncodedString(readBytes(caller, idPtr))
 
 		loaded := e.repository.LoadEntity(e.contractId, id)
 		return writeBytes(caller, loaded)
@@ -79,8 +79,8 @@ func (e *Runtime) callEntry() func(caller *wasmtime.Caller, contractIdPtr int32,
 		// TODO: consume fuel
 
 		// Read the contract Id, method name strings and args
-		contractId := string(readBytes(caller, contractIdPtr))
-		method := string(readBytes(caller, methodPtr))
+		contractId := readUTF16EncodedString(readBytes(caller, contractIdPtr))
+		method := readUTF16EncodedString(readBytes(caller, methodPtr))
 		args := readBytes(caller, argsPtr)
 
 		// Call the contract method with the arguments
@@ -129,7 +129,7 @@ func (e *Runtime) createContractEntry() func(caller *wasmtime.Caller, codeId int
 
 func (e *Runtime) emitEventEntry() func(caller *wasmtime.Caller, eventPtr int32, dataPtr int32) {
 	return func(caller *wasmtime.Caller, eventPtr int32, dataPtr int32) {
-		// Consume fuel
+		// TODO: Consume fuel
 
 		event := readUTF16EncodedString(readBytes(caller, eventPtr))
 		data := readUTF16EncodedString(readBytes(caller, dataPtr))

@@ -90,7 +90,7 @@ func (s *RuntimeTestSuite) TestGasRemaining() {
 
 	remaining, err := s.runtime.Run(interfaces.NewContractMessage("contractId", "addOne", []byte{}, "sender"))
 	s.Require().NoError(err)
-	s.Require().Equal(uint64(7_603), remaining)
+	s.Require().Equal(uint64(8_296), remaining)
 }
 
 func (s *RuntimeTestSuite) TestCrash() {
