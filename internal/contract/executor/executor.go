@@ -35,13 +35,13 @@ func generateContractId(
 	return base58.Encode(contractId[:])
 }
 
-func (ce *ContractExecutor) InitializeContract(
+func (ce *ContractExecutor) CreateContract(
 	repository interfaces.IContractRepository,
 	state []byte,
 	codeId uint64,
 	args []byte,
 	gasLimit uint64,
-) (uint64, string, error) {
+) (uint64, *callbackqueue.CallbackQueue, error) {
 	// Get the total contract amount as salt
 	amount := repository.GetTotalContractAmount()
 	salt := make([]byte, 8)
@@ -50,10 +50,10 @@ func (ce *ContractExecutor) InitializeContract(
 	contractId := generateContractId(state, codeId, salt)
 	err := repository.CreateConctract(codeId, contractId)
 	if err != nil {
-		return 0, "", err
+		return 0, nil, err
 	}
 
-	remaining, err := ce.RunContract(
+	remaining, callbackQueue, err := ce.RunContract(
 		repository,
 		state,
 		interfaces.ContractMessage{
@@ -64,7 +64,7 @@ func (ce *ContractExecutor) InitializeContract(
 		gasLimit,
 	)
 
-	return remaining, contractId, err
+	return remaining, callbackQueue, err
 }
 
 func (ce *ContractExecutor) RunContract(
@@ -72,7 +72,7 @@ func (ce *ContractExecutor) RunContract(
 	state []byte,
 	msg interfaces.ContractMessage,
 	gasLimit uint64,
-) (uint64, error) {
+) (uint64, *callbackqueue.CallbackQueue, error) {
 	callbackQueue := callbackqueue.NewCallbackQueue()
 
 	// Enqueue the initial contract call
@@ -84,14 +84,14 @@ func (ce *ContractExecutor) RunContract(
 		// Run the contract with the current gas limit
 		remaining, err := ce.runContract(callbackQueue, repository, state, msg, gasLimit)
 		if err != nil {
-			return 0, err
+			return 0, callbackQueue, err
 		}
 
 		// Update the gas limit for the next contract call
 		gasLimit = remaining
 	}
 
-	return gasLimit, nil
+	return gasLimit, callbackQueue, nil
 }
 
 func (ce *ContractExecutor) runContract(
