@@ -35,7 +35,7 @@ func generateContractId(
 	return base58.Encode(contractId[:])
 }
 
-func (ce *ContractExecutor) InitializeContractWithGasLimit(
+func (ce *ContractExecutor) InitializeContract(
 	repository interfaces.IContractRepository,
 	state []byte,
 	codeId uint64,
@@ -48,13 +48,12 @@ func (ce *ContractExecutor) InitializeContractWithGasLimit(
 	binary.LittleEndian.PutUint64(salt, amount)
 
 	contractId := generateContractId(state, codeId, salt)
-
 	err := repository.CreateConctract(codeId, contractId)
 	if err != nil {
 		return 0, "", err
 	}
 
-	remaining, err := ce.RunContractWithGasLimit(
+	remaining, err := ce.RunContract(
 		repository,
 		state,
 		interfaces.ContractMessage{
@@ -68,7 +67,7 @@ func (ce *ContractExecutor) InitializeContractWithGasLimit(
 	return remaining, contractId, err
 }
 
-func (ce *ContractExecutor) RunContractWithGasLimit(
+func (ce *ContractExecutor) RunContract(
 	repository interfaces.IContractRepository,
 	state []byte,
 	msg interfaces.ContractMessage,

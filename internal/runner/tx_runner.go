@@ -3,6 +3,7 @@ package runner
 import (
 	"fmt"
 
+	checker "github.com/dadamu/contract-wasmvm/internal/code-checker"
 	"github.com/dadamu/contract-wasmvm/internal/contract/executor"
 	"github.com/dadamu/contract-wasmvm/internal/contract/interfaces"
 	"github.com/dadamu/contract-wasmvm/internal/store"
@@ -49,7 +50,7 @@ func (r *TxRunner) runMessage(state []byte, msg interfaces.VMMessage, gasLimit u
 	switch msg := msg.(type) {
 
 	case interfaces.DeployContractCodeMessage:
-		remaining, err := r.runDeployContract(msg, gasLimit)
+		remaining, err := r.deployContract(msg, gasLimit)
 		if err != nil {
 			r.store.Rollback()
 			return 0, err
@@ -72,11 +73,20 @@ func (r *TxRunner) runMessage(state []byte, msg interfaces.VMMessage, gasLimit u
 	}
 }
 
-func (r *TxRunner) runDeployContract(msg interfaces.DeployContractCodeMessage, gasLimit uint64) (uint64, error) {
+func (r *TxRunner) deployContract(msg interfaces.DeployContractCodeMessage, gasLimit uint64) (uint64, error) {
 	// Consume gas limit
 	consumed := DEPLOY_GAS * uint64(len(msg.Code))
 	if consumed > gasLimit {
 		return 0, fmt.Errorf("not enough gas limit")
+	}
+
+	isUndeterminstic, err := checker.ContainUndeterminsticOps(msg.Code)
+	if err != nil {
+		return 0, fmt.Errorf("failed to check code: %w", err)
+	}
+
+	if isUndeterminstic {
+		return 0, fmt.Errorf("code contains unsupported operations")
 	}
 
 	r.store.StoreContractCode(msg.Code)
@@ -86,5 +96,5 @@ func (r *TxRunner) runDeployContract(msg interfaces.DeployContractCodeMessage, g
 }
 
 func (r *TxRunner) runContract(state []byte, msg interfaces.ContractMessage, gasLimit uint64) (uint64, error) {
-	return r.executor.RunContractWithGasLimit(r.store, state, msg, gasLimit)
+	return r.executor.RunContract(r.store, state, msg, gasLimit)
 }
