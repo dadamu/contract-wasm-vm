@@ -95,8 +95,8 @@ func (e *Runtime) callEntry() func(caller *wasmtime.Caller, contractIdPtr int32,
 	}
 }
 
-func (e *Runtime) createContractEntry() func(caller *wasmtime.Caller, codeId int32, initArgsPtr int32) int32 {
-	return func(caller *wasmtime.Caller, codeId int32, initArgsPtr int32) int32 {
+func (e *Runtime) createContractEntry() func(caller *wasmtime.Caller, codeId int64, initArgsPtr int32) int32 {
+	return func(caller *wasmtime.Caller, codeId int64, initArgsPtr int32) int32 {
 		// TODO: consume fuel
 
 		// Get the total contract amount as salt

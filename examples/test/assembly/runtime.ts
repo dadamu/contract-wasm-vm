@@ -12,7 +12,7 @@ namespace contract {
   ): void;
 
   export declare function create(
-    codeId: i32,
+    codeId: u64,
     initArgs: ArrayBuffer
   ): ArrayBuffer;
 }
